@@ -1,0 +1,87 @@
+version: 2.1
+
+the_branch_filters: &the_branch_filters
+  filters:
+    branches:
+      only:
+      - main
+
+# workflows    
+workflows:
+  version: 2
+  ci_demo:      
+    jobs:
+      - build:
+          <<: *the_branch_filters
+          # context environment.
+          context: ci-demo
+          # parameters.
+          org_name: "code4mk.org"
+      - test:
+          <<: *the_branch_filters
+          requires:
+            - build
+            
+# orbs load.
+orbs:
+  node: circleci/node@5.0.2
+
+# jobs
+jobs:
+  # build job.
+  build:
+    parameters:
+      org_name:
+        type: string
+        default: "code4mk"
+    docker:
+      - image: cimg/base:2022.05
+    environment:
+      AUTHOR_NAME: "Mostafa"
+
+    steps:
+      - node/install:
+          install-yarn: true
+          node-version: '16.15'
+      - run:
+          name: print msg
+          command: |
+            echo "${CIRCLE_BRANCH}"
+            echo "this is circle ci demo"
+            echo "2nd line"
+            echo "${AUTHOR_NAME} kamal"
+            echo "<< parameters.org_name >>"
+            uname
+      
+      - run:
+          name: print step block variable
+          command: |
+            echo "${AUTHOR_NAME}"
+          environment:
+            AUTHOR_NAME: "docker user"
+
+      - run:
+          name: context variable print (secret)
+          command: |
+            echo ${CI_DEMO_VERSION}
+
+      - run:
+          name: print latest node version
+          command: |
+            node --version
+            npm --version
+            yarn --version
+
+      - run: 
+          name: yarn install express project
+          command: |
+            yarn install
+
+  # test job.  
+  test:
+    docker:
+     - image: cimg/base:2022.05
+    steps:
+      - run: echo "ci/cd demo test"
+
+  
